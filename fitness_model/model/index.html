@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <!-- Required meta tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Fitness model</title>
+    <link rel="stylesheet" 
+    href="/Users/shin/Library/Mobile Documents/com~apple~CloudDocs/인공지능/HTML_study/fitness_model/style.css">
+    <!--favicon.ico error 해결-->
+    <link rel="shortcut icon" href="#"> 
+</head>
+<body>
+    <h1>Fitness model</h1>
+
+    <div class="d-grid gap-2 d-md-block" style="margin-top:10px;">
+        <button class = "btn btn-primary" onclick="init()" type="button">squats</button>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css"                 
+            rel="stylesheet" style="text-align:center; margin-top:10px;"
+            integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" 
+            crossorigin="anonymous">  
+    </div>
+    <div class="d-grid gap-2 d-md-block" style="margin-top:10px;">
+        <button class = "btn btn-primary" onclick="fit2()" type="button">forward lunges</button>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css"                 
+            rel="stylesheet" style="text-align:center"
+            integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" 
+            crossorigin="anonymous"> 
+    </div>
+    <div class="d-grid gap-2 d-md-block" style="margin-top:10px;">
+        <button class = "btn btn-primary" onclick="fit3()" type="button">clap jacks</button>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css"                 
+            rel="stylesheet" style="text-align:center"
+            integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" 
+            crossorigin="anonymous"> 
+    </div>
+    <div class="d-grid gap-2 d-md-block" style="margin-top:10px;">
+        <button class = "btn btn-primary" onclick="window.location.reload()" type="button">stop</button>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css"                 
+            rel="stylesheet" style="text-align:center"
+            integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" 
+            crossorigin="anonymous"> 
+    </div>
+
+    <div id="dc"><canvas id="canvas"></canvas></div>
+    <div id="label-container"></div>
+    <!--jQuery-->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+
+    <script type="text/javascript">
+        // More API functions here:
+        // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/pose
+    
+        // the link to your model provided by Teachable Machine export panel
+        const URL1 = "./my_model/";
+        const URL2 = "./my_model2/";
+        const URL3 = "./my_model3/";
+        let model1, model2, model3, webcam, ctx, labelContainer, maxPredictions1, maxPredictions2, maxPredictions3;
+        let flag = false; //첫 화면에 아무것도 없을 때
+        
+        async function init() {
+            const canvas = document.getElementById("canvas");
+            ctx = canvas.getContext("2d");
+
+            if(flag){   // flag==true
+                // 픽셀 정리
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // 컨텍스트 리셋
+                ctx.beginPath();
+            }
+            
+            const modelURL1 = URL1 + "model.json";
+            const metadataURL1 = URL1 + "metadata.json";
+
+            // load the model and metadata
+            // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+            // Note: the pose library adds a tmPose object to your window (window.tmPose)
+            model1 = await tmPose.load(modelURL1, metadataURL1);
+            maxPredictions1 = model1.getTotalClasses();
+    
+            // Convenience function to setup a webcam
+            const size = 200;
+            const flip = true; // whether to flip the webcam
+            webcam = new tmPose.Webcam(size, size, flip); // width, height, flip
+            await webcam.setup(); // request access to the webcam
+            await webcam.play();
+            window.requestAnimationFrame(loop1);
+    
+            // append/get elements to the DOM
+            
+            canvas.width = size; 
+            canvas.height = size;
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions1; i++) { // and class labels
+                labelContainer.appendChild(document.createElement("div"));
+            }
+            flag = true;
+        }
+
+        async function fit2(){
+            const canvas = document.getElementById("canvas");
+            ctx = canvas.getContext("2d");
+
+            if(flag){
+                // 픽셀 정리
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // 컨텍스트 리셋
+                ctx.beginPath();
+            }
+
+            const modelURL2 = URL2 + "model2.json";
+            const metadataURL2 = URL2 + "metadata2.json";
+
+            // load the model and metadata
+            // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+            // Note: the pose library adds a tmPose object to your window (window.tmPose)
+            model2 = await tmPose.load(modelURL2, metadataURL2);
+            maxPredictions2 = model2.getTotalClasses();
+     
+            // Convenience function to setup a webcam
+            const size = 200;
+            const flip = true; // whether to flip the webcam
+            webcam = new tmPose.Webcam(size, size, flip); // width, height, flip
+            await webcam.setup(); // request access to the webcam
+            await webcam.play();
+            window.requestAnimationFrame(loop2);
+    
+            // append/get elements to the DOM
+            canvas.width = size; 
+            canvas.height = size;
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions2; i++) { // and class labels
+                labelContainer.appendChild(document.createElement("div"));
+            }
+            flag = true;
+        }
+
+        async function fit3(){
+            const canvas = document.getElementById("canvas");
+            ctx = canvas.getContext("2d");
+
+            if(flag){
+                // 픽셀 정리
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // 컨텍스트 리셋
+                ctx.beginPath();
+            }
+
+            const modelURL3 = URL3 + "model3.json";
+            const metadataURL3 = URL3 + "metadata3.json";
+
+            // load the model and metadata
+            // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+            // Note: the pose library adds a tmPose object to your window (window.tmPose)
+            
+            model3 = await tmPose.load(modelURL3, metadataURL3);
+            maxPredictions3 = model3.getTotalClasses();
+    
+            // Convenience function to setup a webcam
+            const size = 200;
+            const flip = true; // whether to flip the webcam
+            webcam = new tmPose.Webcam(size, size, flip); // width, height, flip
+            await webcam.setup(); // request access to the webcam
+            await webcam.play();
+            window.requestAnimationFrame(loop3);
+    
+            // append/get elements to the DOM
+            canvas.width = size; 
+            canvas.height = size;
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions3; i++) { // and class labels
+                labelContainer.appendChild(document.createElement("div"));
+            }
+            flag = true;
+        }
+
+        async function loop1(timestamp) {
+            webcam.update(); // update the webcam frame
+            await predict1();
+            window.requestAnimationFrame(loop1);
+        }
+        async function loop2(timestamp) {
+            webcam.update(); // update the webcam frame
+            await predict2();
+            window.requestAnimationFrame(loop2);
+        }
+        async function loop3(timestamp) {
+            webcam.update(); // update the webcam frame
+            await predict3();
+            window.requestAnimationFrame(loop3);
+        }
+
+        var status = "stand1"
+        var count = 0;
+        async function predict1() {
+            // Prediction #1: run input through posenet
+            // estimatePose can take in an image, video or canvas html element
+            const { pose, posenetOutput } = await model1.estimatePose(webcam.canvas);
+            // Prediction 2: run input through teachable machine classification model
+            const prediction = await model1.predict(posenetOutput);
+    
+            if (prediction[0].probability.toFixed(2) > 0.90) {
+                if (status == "squat") {
+                    count++
+                    var audio = new Audio(count%10 + '.mp3');
+                    audio.play();
+                }
+                status = "stand1"
+            } else if (prediction[1].probability.toFixed(2) == 1.00) {
+                status = "squat"
+            } else if (prediction[2].probability.toFixed(2) == 1.00) {
+                if (status == "squat" || status == "stand1") {
+                    var audio = new Audio('bad.mp3');
+                    audio.play();
+                }
+                status = "bent"
+            }
+    
+            for (let i = 0; i < maxPredictions1; i++) {
+                const classPrediction =
+                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                labelContainer.childNodes[i].innerHTML = classPrediction;
+            }
+    
+            // finally draw the poses
+            drawPose(pose);
+        }
+
+        var status = "stand2";
+        var model2_count = 0;
+        async function predict2() {
+            // Prediction #1: run input through posenet
+            // estimatePose can take in an image, video or canvas html element
+            const { pose, posenetOutput } = await model2.estimatePose(webcam.canvas);
+            // Prediction 2: run input through teachable machine classification model
+            const prediction = await model2.predict(posenetOutput);
+    
+            if (prediction[0].probability.toFixed(2) > 0.90) {
+                if (status == "forward lunges") {
+                    model2_count++;
+                    var audio = new Audio(count%10 + '.mp3');
+                    audio.play();
+                }
+                status = "stand2";
+            } else if (prediction[1].probability.toFixed(2) == 1.00) {
+                status = "forward lunges";
+            } else if (prediction[2].probability.toFixed(2) == 1.00) {
+                if (status == "forward lunges" || status == "stand2") {
+                    var audio = new Audio('bad.mp3');
+                    audio.play();
+                }
+                status = "wrong";
+            }
+    
+            for (let i = 0; i < maxPredictions2; i++) {
+                const classPrediction =
+                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                labelContainer.childNodes[i].innerHTML = classPrediction;
+            }
+    
+            // finally draw the poses
+            drawPose(pose);
+        }
+
+        var status = "stand3";
+        var count = 0;
+        async function predict3() {
+            // Prediction #1: run input through posenet
+            // estimatePose can take in an image, video or canvas html element
+            const { pose, posenetOutput } = await model3.estimatePose(webcam.canvas);
+            // Prediction 2: run input through teachable machine classification model
+            const prediction = await model3.predict(posenetOutput);
+    
+            if (prediction[0].probability.toFixed(2) > 0.90) {
+                if (status == "clap jacks") {
+                    count++;
+                    var audio = new Audio(count%10 + '.mp3');
+                    audio.play();
+                }
+                status = "stand3";
+            } else if (prediction[1].probability.toFixed(2) == 1.00) {
+                status = "clap jacks";
+            } else if (prediction[2].probability.toFixed(2) == 1.00) {
+                if (status == "clap jacks" || status == "stand3") {
+                    var audio = new Audio('bad.mp3');
+                    audio.play();
+                }
+                status = "wrong3";
+            }
+    
+            for (let i = 0; i < maxPredictions3; i++) {
+                const classPrediction =
+                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                labelContainer.childNodes[i].innerHTML = classPrediction;
+            }
+    
+            // finally draw the poses
+            drawPose(pose);
+        }
+    
+    
+        function drawPose(pose) {
+            if (webcam.canvas) {
+                ctx.drawImage(webcam.canvas, 0, 0);
+                // draw the keypoints and skeleton
+                if (pose) {
+                    const minPartConfidence = 0.5;
+                    tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx);
+                    tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
